@@ -14,7 +14,6 @@ from openai.error import InvalidRequestError, RateLimitError
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-# 列挙型の定義
 class Mode(Enum):
     origin = 1
     digest_test = 2
@@ -39,7 +38,7 @@ def git_diff(base, *args):
     return diff
 
 
-def git_diff_digest(base, model, *args):
+def git_diff_digest(base, model, *args) -> dict:
     digests = {}
     for f in args:
         diff = git_diff(base, f)
@@ -157,11 +156,11 @@ def send(
         mode: Mode,
 ):
     res = None
+    digests = None
     while res is None:
-        diff = None
-        digests = None
         if mode == Mode.origin:
             diff = git_diff(base)
+            digests = None
         elif mode == Mode.digest_test:
             test_pattern = r'(?<![a-z])tests?(?![a-z])'
             sources = list(filter(lambda s: re.match(test_pattern, s, re.IGNORECASE) is None, diff_files))
@@ -169,7 +168,10 @@ def send(
             diff = git_diff(base, *sources) if len(sources) > 0 else None
             digests = git_diff_digest(base, model, *tests) if len(tests) > 0 else None
         elif mode == Mode.digest_all:
-            digests = git_diff_digest(base, model, *diff_files)
+            diff = None
+            digests = digests if digests is not None else {}
+            f = set(diff_files).difference(set(digests.keys()))
+            digests.update(git_diff_digest(base, model, *f))
         else:
             raise Exception(f"Unknown mode: {mode}")
 
@@ -251,9 +253,9 @@ def open_ai_create(**kwargs):
     return res
 
 
-def main(base="origin/HEAD", model: str = None, check_public: bool = True, digest_mode: str = "origin"):
+def main(base="origin/HEAD", model: str = None, safe: bool = True, digest_mode: str = "origin"):
     mode = Mode[digest_mode]
-    if check_public and not check_public_repo():
+    if safe and not check_public_repo():
         raise Exception("git repo is not public")
 
     if model is None:
