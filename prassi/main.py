@@ -116,7 +116,7 @@ def judge_lang(model: str, body: str):
             {
                 "role": "system",
                 "content": (
-                    "あなたは、英語や日本語などのあらゆる言語を扱うことができ、文章で使用されている言語が何かを判定することができます。\n"
+                    "あなたは、英語や日本語などのあらゆる言語を扱うことができ、マークダウン形式の文章で使用されている言語が何かを判定することができます。\n"
                 ),
             },
             {
@@ -281,6 +281,10 @@ def main(base="origin/HEAD", model: str = None, safe: bool = True, digest_mode: 
     commit_log = git_log(base)
     print(f"commit log: {commit_log}")
     send(model=model, base=base, diff_files=diff_files, readme=readme, commit_log=commit_log, lang=lang, mode=mode)
+
+
+def prassi():
+    fire.Fire(main)
 
 
 if __name__ == "__main__":

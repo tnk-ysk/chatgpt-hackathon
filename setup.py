@@ -21,6 +21,6 @@ setup(
     python_requires='>=3.7',
     install_requires=_requires_from_file('requirements.txt'),
     entry_points={
-        'console_scripts': ['prassi = prassi.main:main']
+        'console_scripts': ['prassi = prassi.main:prassi']
     },
 )
